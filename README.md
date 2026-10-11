@@ -1,6 +1,6 @@
-# Void Mode
+# Void Mode — Dual AI Collaboration
 
-Void Mode is a long-running profile/launcher for [Project UAI](https://github.com/azcvyhnb-cpu/ProjectUAI). It uses UAI's existing provider registry and configuration rather than maintaining a second, incompatible API stack.
+Void Mode is a standalone Roblox Lua UI for configuring **two OpenAI-compatible Chat Completions models** and having them collaborate on a task.
 
 ## Load
 
@@ -8,25 +8,34 @@ Void Mode is a long-running profile/launcher for [Project UAI](https://github.co
 loadstring(game:HttpGet("https://raw.githubusercontent.com/azcvyhnb-cpu/Void-Mode/main/main.lua"))()
 ```
 
-## Setup
+## Where is the UI?
 
-1. Run the loader.
-2. In **UAI → Providers**, add a provider or choose **Custom endpoint**.
-3. Enter the provider's Base URL, API key/auth style, API protocol, and exact model ID. For OpenAI-compatible services, use the base URL expected by that service (often ending in `/v1`).
-4. Save the provider and select it as active.
+After running the loader, a window named **VOID MODE / DUAL AI** should appear. If it does not, check the executor console for an HTTP, compile, or GUI-parenting error. Re-run the loader to replace an already-open Void Mode window.
 
-The API key is stored by UAI's configuration on the client. Do not paste keys into this repository or share configuration exports containing credentials.
+## Configure the two models
 
-## What Void Mode changes
+Fill in each model's separate:
 
-- Enables UAI's unlimited top-level turn setting.
-- Enables UAI's long request-wait setting.
-- Enables unlimited subagent step/time budgets.
-- Leaves provider selection, model discovery, tool permissions, context compaction, and Stop under UAI's existing systems.
-- Provides `getgenv().VoidMode.openProviders()` to reopen provider settings and `getgenv().VoidMode.disable()` to turn off the profile's unlimited switches.
+- **Base URL** — for example `https://ai.thirx.com/v1`, if that provider documents this as its OpenAI-compatible base URL.
+- **API key** — optional only if the endpoint does not require authentication.
+- **Model ID** — the exact identifier given by the provider.
 
-## Important limits
+Both endpoints must support OpenAI-compatible `POST /chat/completions` requests and return `choices[1].message.content`. A provider that uses Anthropic Messages or a proprietary schema needs an adapter before it can work here.
 
-"Unlimited" here means Void Mode does not add its own request-count or turn-count quota. It cannot remove the API provider's rate limits, billing/credit rules, model context/output limits, Roblox/executor HTTP deadlines, network failures, or platform restrictions. A host may still cap request duration. Use only API endpoints and keys you are authorized to use.
+## How collaboration works
 
-Void Mode currently relies on Project UAI's public loader and public config API. It does not vendor or patch UAI's 67k-line bundled client; keeping the upstream client updated is therefore important.
+Click **RUN COLLABORATION**. Void Mode runs three sequential API calls:
+
+1. **Model A plans** the task and proposes a solution.
+2. **Model B reviews** that plan, finds weaknesses, and contributes improvements.
+3. **Model A synthesizes** both outputs into the final answer.
+
+This is actual cross-model handoff, not just alternating model selection. It is sequential rather than parallel so each model can use the previous model's output. One collaboration uses three API requests; provider limits and latency still apply.
+
+## Credential and runtime notes
+
+- API keys are kept in UI fields in memory for the current session and are not written to this repository or deliberately persisted by Void Mode.
+- Use only API endpoints and keys you are authorized to use.
+- "Unlimited" cannot override provider rate limits, credits/billing, context/output limits, executor timeouts, HTTP failures, or network/platform restrictions.
+- The script requires an executor that can make HTTP POST requests. If no executor request function exists, it falls back to Roblox `HttpService:RequestAsync`, which may require HTTP requests to be enabled by the host.
+- This is a standalone UI; it does not add a new tab inside Project UAI's existing interface.
