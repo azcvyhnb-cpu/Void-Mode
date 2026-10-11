@@ -32,11 +32,11 @@ if not (type(client) == "table" and client.alive) then
     if not ran then
         -- Some executor environments expect the downloaded chunk to be called
         -- without an options table. Report the original error if both fail.
-        local fallback, fallbackError = pcall(compile)
-        if not fallback then
-            error("[Void Mode] Project UAI failed to start: " .. tostring(fallbackError or result))
+        local fallbackOk, fallbackResult = pcall(compile)
+        if not fallbackOk then
+            error("[Void Mode] Project UAI failed to start: " .. tostring(fallbackResult or result))
         end
-        result = fallback
+        result = fallbackResult
     end
     if type(result) == "table" and result.alive then
         client = result
